@@ -1,8 +1,9 @@
 # src/data_processing.py
 
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, SimpleImputer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
 
 def get_preprocessing_pipeline(numeric_columns, categorical_columns, binary_columns):
     """Creates a ColumnTransformer for preprocessing numeric, categorical, and binary columns."""
