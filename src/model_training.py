@@ -4,6 +4,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import StratifiedKFold
 
 
 def build_full_pipeline(processing_pipeline, remove_collinear, pca_n_components):
@@ -19,12 +20,28 @@ def build_full_pipeline(processing_pipeline, remove_collinear, pca_n_components)
     )
 
 
-def tune_model(pipeline, X_train, y_train, param_grid):
-    """Tunes the model using GridSearchCV to find the best hyperparameters."""
+def tune_model(pipeline, X_train, y_train, param_grid, cv_splits=5):
+    """
+    Trains a model using a given pipeline and performs grid search for hyperparameter tuning.
 
-    grid_search = GridSearchCV(pipeline, param_grid, scoring="roc_auc", cv=5, n_jobs=-1)
+    Args:
+        pipeline (Pipeline): The preprocessing and model pipeline.
+        X_train (pd.DataFrame): The training features.
+        y_train (np.array): The training labels.
+        param_grid (dict): The hyperparameter grid for tuning.
+        cv_splits (int): Number of cross-validation splits (default: 5).
+
+    Returns:
+        The best estimator from the grid search.
+    """
+    # Create a StratifiedKFold cross-validator with specified splits
+    cv = StratifiedKFold(n_splits=cv_splits)
+
+    # Set up GridSearchCV with the provided pipeline and param_grid
+    grid_search = GridSearchCV(pipeline, param_grid, cv=cv, scoring="accuracy")
+
+    # Fit the model
     grid_search.fit(X_train, y_train)
-
     return (
         grid_search.best_estimator_,
         grid_search.best_params_,

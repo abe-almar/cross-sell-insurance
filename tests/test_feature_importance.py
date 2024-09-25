@@ -1,7 +1,6 @@
 import pytest  # type: ignore
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import StratifiedKFold
 from src.feature_importance import extract_feature_importance
 from src.model_training import build_full_pipeline, tune_model
 from src.data_processing import get_preprocessing_pipeline
@@ -13,18 +12,18 @@ def sample_training_data():
     """Sample training data as a pandas DataFrame for the feature importance test."""
     X_train = pd.DataFrame(
         {
-            "Age": [30, 40],
-            "Annual_Premium": [5000, 6000],
-            "Previously_Insured": [1, 0],
-            "Driving_License": [0, 1],
-            "Gender": ["Male", "Female"],
-            "Region_Code": ["1", "2"],
-            "Vehicle_Age": ["1-2", "2-3"],
-            "Vehicle_Damage": ["Yes", "No"],
-            "Policy_Sales_Channel": ["123", "456"],
+            "Age": [30, 40, 20, 40, 85],
+            "Annual_Premium": [5000, 6000, 6000, 3000, 7000],
+            "Previously_Insured": [1, 0, 0, 1, 0],
+            "Driving_License": [0, 1, 1, 1, 1],
+            "Gender": ["Male", "Female", "Male", "Female", "Male"],
+            "Region_Code": ["1", "2", "25", "25", "1"],
+            "Vehicle_Age": ["1-2", "2-3", "1-2", "2-3", "2-3"],
+            "Vehicle_Damage": ["Yes", "No", "Yes", "Yes", "No"],
+            "Policy_Sales_Channel": ["123", "456", "123", "456", "456"],
         }
     )
-    y_train = np.array([1, 0])
+    y_train = np.array([1, 0, 0, 0, 1])
     return X_train, y_train
 
 
@@ -49,7 +48,6 @@ def test_feature_importance(sample_training_data):
     param_grid = {
         "classifier__n_estimators": [10, 20],  # Keep it small for unit testing
         "classifier__max_depth": [2, 4],
-        "class_weight": ["balanced"],
     }
     # build the pipeline
 
@@ -62,17 +60,27 @@ def test_feature_importance(sample_training_data):
         pca_n_components=0.95,
     )
 
-    # Set up StratifiedKFold with 2 splits for testing
-    skf = StratifiedKFold(n_splits=2)
-
-    # Train the model using grid search with cross-validation
-    trained_model = tune_model(full_pipeline, X_train, y_train, param_grid, cv=skf)
-
-    # extract feature importance
-    all_features = numeric_columns + categorical_columns + binary_columns
-    feature_importance = extract_feature_importance(
-        trained_model, X_train, numeric_columns, categorical_columns, binary_columns
+    # Train the model using grid search with cross-validation handled internally
+    best_estimator_, _, _ = tune_model(
+        full_pipeline, X_train, y_train, param_grid, cv_splits=2
     )
+
+    # Extract feature importance
+
+    feature_importance = extract_feature_importance(
+        best_estimator_,
+        X_train,
+        y_train,
+        numeric_columns,
+        categorical_columns,
+        binary_columns,
+    )
+    cat_features = (
+        best_estimator_.named_steps["feature_processing"]
+        .transformers_[1][1]["onehot"]
+        .get_feature_names_out(categorical_columns)
+    )
+    all_features = numeric_columns + list(cat_features) + binary_columns
 
     # ensure the feature importance extraction returns the correct number of features
     assert len(feature_importance) == len(all_features)

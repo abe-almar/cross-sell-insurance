@@ -1,7 +1,6 @@
 import pytest  # type: ignore
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import StratifiedKFold
 from src.model_training import build_full_pipeline, tune_model
 from src.data_processing import get_preprocessing_pipeline
 from src.custom_transformers import RemoveCollinearFeatures
@@ -49,7 +48,6 @@ def test_model_training(sample_training_data):
     param_grid = {
         "classifier__n_estimators": [10, 20],  # Keep it small for unit testing
         "classifier__max_depth": [2, 4],
-        "class_weight": ["balanced"],
     }
     # build the pipeline
 
@@ -62,11 +60,10 @@ def test_model_training(sample_training_data):
         pca_n_components=0.95,
     )
 
-    # Set up StratifiedKFold with 2 splits for testing
-    skf = StratifiedKFold(n_splits=2)
-
-    # Train the model using grid search with cross-validation
-    trained_model = tune_model(full_pipeline, X_train, y_train, param_grid, cv=skf)
+    # Train the model using grid search with cross-validation handled internally
+    best_estimator, _, _ = tune_model(
+        full_pipeline, X_train, y_train, param_grid, cv_splits=2
+    )
 
     # ensure pipeline is fitted
-    assert trained_model.named_stepd["classifier"].fit is not None
+    assert best_estimator.named_steps["classifier"].fit is not None

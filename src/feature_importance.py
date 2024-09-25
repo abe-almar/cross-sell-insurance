@@ -1,8 +1,9 @@
 # src/feature_importance.py
 from sklearn.ensemble import RandomForestClassifier
 
+
 def extract_feature_importance(
-    pipeline, X_train, numeric_columns, categorical_columns, binary_columns
+    pipeline, X_train, y_train, numeric_columns, categorical_columns, binary_columns
 ):
     """Extracts feature importance after the transformation pipeline."""
 
@@ -19,12 +20,12 @@ def extract_feature_importance(
 
     # Train a standalone RandomForestClassifier for feature importance on pre-PCA data
     rf = RandomForestClassifier(n_estimators=100, random_state=42)
-    rf.fit(pre_pca_data, pipeline.named_steps["classifier"].predict(X_train))
+    rf.fit(pre_pca_data, y_train)
 
     importances = rf.feature_importances_
     feature_importance = sorted(
         zip(all_features, importances), key=lambda x: x[1], reverse=True
     )
-
-    for feature, importance in feature_importance:
-        print(f"Feature: {feature}, Importance: {importance}")
+    return feature_importance
+ #   for feature, importance in feature_importance:
+  #      print(f"Feature: {feature}, Importance: {importance}")
