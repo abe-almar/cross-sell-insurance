@@ -1,30 +1,10 @@
-import pytest  # type: ignore
-import numpy as np
-import pandas as pd
 from src.model_training import build_full_pipeline, tune_model
 from src.data_processing import get_preprocessing_pipeline
 from src.custom_transformers import RemoveCollinearFeatures
+import sys
+import os
 
-
-@pytest.fixture
-def sample_training_data():
-    """Sample training data as a pandas DataFrame for the feature importance test."""
-    X_train = pd.DataFrame(
-        {
-            "Age": [30, 40, 20, 40, 85],
-            "Annual_Premium": [5000, 6000, 6000, 3000, 7000],
-            "Previously_Insured": [1, 0, 0, 1, 0],
-            "Driving_License": [0, 1, 1, 1, 1],
-            "Gender": ["Male", "Female", "Male", "Female", "Male"],
-            "Region_Code": ["1", "2", "25", "25", "1"],
-            "Vehicle_Age": ["1-2", "2-3", "1-2", "2-3", "2-3"],
-            "Vehicle_Damage": ["Yes", "No", "Yes", "Yes", "No"],
-            "Policy_Sales_Channel": ["123", "456", "123", "456", "456"],
-        }
-    )
-    y_train = np.array([1, 0, 0, 0, 1])
-    return X_train, y_train
-
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 def test_model_training(sample_training_data):
     """Test that the model pipeline trains succesfully without errors.

@@ -5,6 +5,10 @@ from src.data_processing import get_preprocessing_pipeline
 from src.custom_transformers import RemoveCollinearFeatures
 from src.model_training import build_full_pipeline, tune_model
 from src.feature_importance import extract_feature_importance
+import pickle
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve(strict=True).parent / "src"
 
 # Sample data loading
 data = pd.read_csv("clientes.csv")
@@ -44,7 +48,9 @@ param_grid = {
 }
 
 # Tune the model
-best_model, best_params, best_score = tune_model(full_pipeline, X, y, param_grid)
+best_model, best_params, best_score = tune_model(
+    full_pipeline, X, y, param_grid, BASE_DIR
+)
 print(f"Best Parameters: {best_params}")
 print(f"Best AUC-ROC Score: {best_score}")
 
@@ -52,3 +58,12 @@ print(f"Best AUC-ROC Score: {best_score}")
 extract_feature_importance(
     full_pipeline, X, numeric_columns, categorical_columns, binary_columns
 )
+
+# Predict
+
+with open(BASE_DIR, 'rb') as f:
+    loaded_model = pickle.load(f)
+
+# Now `loaded_model` can be used for predictions
+y_pred = loaded_model.predict(X)
+

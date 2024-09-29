@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedKFold
+import pickle
 
 
 def build_full_pipeline(processing_pipeline, remove_collinear, pca_n_components):
@@ -20,7 +21,9 @@ def build_full_pipeline(processing_pipeline, remove_collinear, pca_n_components)
     )
 
 
-def tune_model(pipeline, X_train, y_train, param_grid, cv_splits=5):
+def tune_model(
+    pipeline, X_train, y_train, param_grid, cv_splits=5, save_model_path=None
+):
     """
     Trains a model using a given pipeline and performs grid search for hyperparameter tuning.
 
@@ -30,6 +33,7 @@ def tune_model(pipeline, X_train, y_train, param_grid, cv_splits=5):
         y_train (np.array): The training labels.
         param_grid (dict): The hyperparameter grid for tuning.
         cv_splits (int): Number of cross-validation splits (default: 5).
+        save_model_path(str): Path to save the best model using Pickle (default: None)
 
     Returns:
         The best estimator from the grid search.
@@ -42,6 +46,13 @@ def tune_model(pipeline, X_train, y_train, param_grid, cv_splits=5):
 
     # Fit the model
     grid_search.fit(X_train, y_train)
+
+    # Save the model using Pickle, if save_model_path is provided
+    if save_model_path:
+        with open(save_model_path, "wb") as f:
+            pickle.dump(grid_search.best_estimator_, f)
+        print(f"Model saved to {save_model_path}")
+
     return (
         grid_search.best_estimator_,
         grid_search.best_params_,
