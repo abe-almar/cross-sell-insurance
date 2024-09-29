@@ -1,69 +1,43 @@
-# main.py
-
-import pandas as pd
-from src.data_processing import get_preprocessing_pipeline
-from src.custom_transformers import RemoveCollinearFeatures
-from src.model_training import build_full_pipeline, tune_model
-from src.feature_importance import extract_feature_importance
+from fastapi import FastAPI  # type: ignore
+from pydantic import BaseModel  # type: ignore
 import pickle
-from pathlib import Path
+import pandas as pd
 
-BASE_DIR = Path(__file__).resolve(strict=True).parent / "src"
+# Create FastAPI app
+app = FastAPI()
 
-# Sample data loading
-data = pd.read_csv("clientes.csv")
+# Load the trained model and preprocessing pipeline
+with open("best_model.pkl", "rb") as f:
+    model = pickle.load(f)
 
-# Define columns
-numeric_columns = ["Age", "Annual_Premium"]
-binary_columns = ["Previously_Insured", "Driving_License"]
-categorical_columns = [
-    "Gender",
-    "Region_Code",
-    "Vehicle_Age",
-    "Vehicle_Damage",
-    "Policy_Sales_Channel",
-]
 
-# Split into features and target
-X = data.drop(columns=["Response", "id"])
-y = data["Response"]
+# Define the request schema using Pydantic
+class PredictionRequest(BaseModel):
+    Age: int
+    Annual_Premium: float
+    Gender: str
+    Region_Code: str
+    Vehicle_Age: str
+    Vehicle_Damage: str
+    Policy_Sales_Channel: int
+    Previously_Insured: int
+    Driving_License: int
 
-# Get preprocessing pipeline
-processing_pipeline = get_preprocessing_pipeline(
-    numeric_columns, categorical_columns, binary_columns
-)
 
-# Build the full pipeline with collinearity removal and PCA
-full_pipeline = build_full_pipeline(
-    processing_pipeline, RemoveCollinearFeatures(threshold=0.9), pca_n_components=0.95
-)
+# Define a root endpoint
+@app.get("/")
+def root():
+    return {"health_check": "OK", "message": "Cross-sell Insurance Model API"}
 
-# Define hyperparameter grid for tuning
-param_grid = {
-    "n_estimators": [100, 200],
-    "max_depth": [10, 20, 30],
-    "min_samples_split": [2, 5, 10],
-    "min_samples_leaf": [1, 2, 4],
-    "class_weight": ["balanced"],
-}
 
-# Tune the model
-best_model, best_params, best_score = tune_model(
-    full_pipeline, X, y, param_grid, BASE_DIR
-)
-print(f"Best Parameters: {best_params}")
-print(f"Best AUC-ROC Score: {best_score}")
+# Define the prediction endpoint
+@app.post("/predict")
+def predict(request: PredictionRequest):
+    # Convert the incoming request to a DataFrame
+    input_data = pd.DataFrame([request.dict()])
 
-# Extract and display feature importance
-extract_feature_importance(
-    full_pipeline, X, numeric_columns, categorical_columns, binary_columns
-)
+    # Make a prediction using the model
+    prediction = model.predict(input_data)
 
-# Predict
-
-with open(BASE_DIR, 'rb') as f:
-    loaded_model = pickle.load(f)
-
-# Now `loaded_model` can be used for predictions
-y_pred = loaded_model.predict(X)
-
+    # Return the prediction
+    return {"prediction": int(prediction[0])}
