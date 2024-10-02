@@ -1,10 +1,11 @@
-from src.model_training import build_full_pipeline, tune_model
-from src.data_processing import get_preprocessing_pipeline
-from src.custom_transformers import RemoveCollinearFeatures
+from app.src.model_training import build_full_pipeline, tune_model
+from app.src.data_processing import get_preprocessing_pipeline
+from app.src.custom_transformers import RemoveCollinearFeatures
 import sys
 import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
+
 
 def test_model_training(sample_training_data):
     """Test that the model pipeline trains succesfully without errors.

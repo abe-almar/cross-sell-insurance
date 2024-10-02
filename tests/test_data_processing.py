@@ -1,5 +1,5 @@
 import numpy as np
-from src.data_processing import get_preprocessing_pipeline
+from app.src.data_processing import get_preprocessing_pipeline
 import sys
 import os
 

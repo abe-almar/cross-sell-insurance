@@ -1,7 +1,7 @@
 import pickle
-from src.model_training import build_full_pipeline, tune_model
-from src.data_processing import get_preprocessing_pipeline
-from src.custom_transformers import RemoveCollinearFeatures
+from app.src.model_training import build_full_pipeline, tune_model
+from app.src.data_processing import get_preprocessing_pipeline
+from app.src.custom_transformers import RemoveCollinearFeatures
 import sys
 import os
 

@@ -1,4 +1,4 @@
-from src.custom_transformers import RemoveCollinearFeatures
+from app.src.custom_transformers import RemoveCollinearFeatures
 import sys
 import os
 
