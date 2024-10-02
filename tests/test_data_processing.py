@@ -1,25 +1,9 @@
-import pytest  # type: ignore
 import numpy as np
-import pandas as pd
-from src.data_processing import get_preprocessing_pipeline
+from app.src.data_processing import get_preprocessing_pipeline
+import sys
+import os
 
-
-@pytest.fixture
-def sample_data():
-    """Sample input data as a pandas DataFrame with missing values, categorical, and numeric features."""
-    data = {
-        "Age": [30, 40],
-        "Annual_Premium": [5000, np.nan],
-        "Previously_Insured": [1, 0],
-        "Driving_License": [0, 1],
-        "Gender": ["Male", "Female"],
-        "Region_Code": ["1", "2"],
-        "Vehicle_Age": ["1-2", "2-3"],
-        "Vehicle_Damage": ["Yes", "No"],
-        "Policy_Sales_Channel": ["123", "456"],
-    }
-    return pd.DataFrame(data)
-
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 def test_data_processing_pipeline(sample_data):
     """Test that the data processing pipeline correctly handles missing values and categorical features.

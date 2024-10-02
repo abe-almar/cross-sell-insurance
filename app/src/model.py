@@ -1,0 +1,70 @@
+# model.py
+
+import pandas as pd
+from data_processing import get_preprocessing_pipeline
+from custom_transformers import RemoveCollinearFeatures
+from model_training import build_full_pipeline, tune_model
+from feature_importance import extract_feature_importance
+import pickle
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve(strict=True)
+# Sample data loading
+data = pd.read_csv(
+    "/Users/abe_alcaraz/Desktop/REPOSITORIOS/cross-sell-insurance/cross-sell-insurance/data/clientes.csv"
+)
+
+# Define columns
+numeric_columns = ["Age", "Annual_Premium"]
+binary_columns = ["Previously_Insured", "Driving_License"]
+categorical_columns = [
+    "Gender",
+    "Region_Code",
+    "Vehicle_Age",
+    "Vehicle_Damage",
+    "Policy_Sales_Channel",
+]
+
+# Split into features and target
+X = data.drop(columns=["Response", "id"])
+y = data["Response"]
+
+# Get preprocessing pipeline
+processing_pipeline = get_preprocessing_pipeline(
+    numeric_columns, categorical_columns, binary_columns
+)
+
+# Build the full pipeline with collinearity removal and PCA
+full_pipeline = build_full_pipeline(
+    processing_pipeline, RemoveCollinearFeatures(threshold=0.9), pca_n_components=0.95
+)
+
+# Define hyperparameter grid for tuning
+param_grid = {
+    "classifier__n_estimators": [100, 200],
+    "classifier__max_depth": [10, 20, 30],
+    "classifier__min_samples_split": [2, 5, 10],
+    "classifier__min_samples_leaf": [1, 2, 4],
+    "classifier__class_weight": ["balanced"],
+}
+
+
+# Tune the model
+best_model, best_params, best_score = tune_model(
+    full_pipeline, X, y, param_grid, save_model_path=BASE_DIR
+)
+print(f"Best Parameters: {best_params}")
+print(f"Best AUC-ROC Score: {best_score}")
+
+# Extract and display feature importance
+extract_feature_importance(
+    full_pipeline, X, numeric_columns, categorical_columns, binary_columns
+)
+
+# Predict
+
+with open(BASE_DIR, "rb") as f:
+    loaded_model = pickle.load(f)
+
+# Now `loaded_model` can be used for predictions
+y_pred = loaded_model.predict(X)

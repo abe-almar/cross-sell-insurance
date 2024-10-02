@@ -1,12 +1,8 @@
-import pytest
-import numpy as np
-from src.custom_transformers import RemoveCollinearFeatures
+from app.src.custom_transformers import RemoveCollinearFeatures
+import sys
+import os
 
-
-@pytest.fixture
-def correlated_data():
-    """Sample input data with high collinearity between columns."""
-    return np.array([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 
 def test_remove_collinear_features(correlated_data):
